@@ -20,7 +20,11 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-void/80 backdrop-blur-sm" onClick={onClose} />
+      <div
+        data-testid="modal-backdrop"
+        className="absolute inset-0 bg-void/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div
         role="dialog"
         aria-modal="true"
