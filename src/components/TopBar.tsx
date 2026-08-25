@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { formatAp } from '@/lib/format'
 import { useGameStore } from '@/stores/useGameStore'
 import { StreakPill } from './StreakPill'
+import { SystemHumToggle } from './SystemHumToggle'
 
 const NAV_ITEMS = [{ to: '/', label: 'MISSION SELECT' }]
 
@@ -33,6 +34,7 @@ export function TopBar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <SystemHumToggle className="hidden sm:inline-flex" />
           <StreakPill streak={currentStreak} best={bestStreak} className="hidden sm:inline-flex" />
           <span className="rounded border border-signal-dim px-2 py-0.5 text-[11px] tracking-widest text-signal">
             ◆ {formatAp(totalPoints)} AP

@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/format'
+import { timerPhase, type TimerPhase } from '@/lib/tension'
+
+export type { TimerPhase }
 
 function formatClock(totalSeconds: number): string {
   const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0')
@@ -11,15 +14,19 @@ export function TimerPill({
   limitSeconds,
   running = true,
   onExpire,
+  onPhaseChange,
   className,
 }: {
   /** Declared limit; when set the pill counts down, otherwise it counts up. */
   limitSeconds?: number
   running?: boolean
   onExpire?: () => void
+  /** Notifies the ambient audio layer when the tension phase changes. */
+  onPhaseChange?: (phase: TimerPhase) => void
   className?: string
 }) {
   const [elapsed, setElapsed] = useState(0)
+  const lastPhaseRef = useRef<TimerPhase | null>(null)
 
   const hasLimit = limitSeconds !== undefined && limitSeconds > 0
   const remaining = hasLimit ? Math.max(0, (limitSeconds ?? 0) - elapsed) : elapsed
@@ -35,6 +42,16 @@ export function TimerPill({
     if (expired && running) onExpire?.()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expired])
+
+  const fraction = hasLimit && limitSeconds ? remaining / limitSeconds : 1
+  const phase = expired || !running ? ('idle' as TimerPhase) : timerPhase(hasLimit, fraction)
+
+  useEffect(() => {
+    if (lastPhaseRef.current !== phase) {
+      lastPhaseRef.current = phase
+      onPhaseChange?.(phase)
+    }
+  }, [phase, onPhaseChange])
 
   const urgency = expired ? 'text-alert' : hasLimit && remaining <= 30 ? 'text-warn' : 'text-ink-dim'
 

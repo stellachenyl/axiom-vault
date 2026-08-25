@@ -47,3 +47,55 @@ body {
     rgba(255, 255, 255, 0.012) 4px
   );
 }
+
+/* ── CRT boot screen ─────────────────────────────────────────────── */
+
+.crt-screen {
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%),
+    #05070a;
+}
+
+/* Slight barrel-curvature illusion: rounded tube + inner shadow + warp */
+.crt-tube {
+  border-radius: 2.5% / 4%;
+  box-shadow:
+    inset 0 0 12rem rgba(0, 0, 0, 0.9),
+    inset 0 0 3rem rgba(53, 224, 184, 0.06),
+    0 0 6rem rgba(0, 0, 0, 0.8);
+}
+
+.crt-text {
+  color: var(--color-signal);
+  text-shadow:
+    0 0 6px rgba(53, 224, 184, 0.7),
+    0 0 18px rgba(53, 224, 184, 0.35);
+}
+
+.crt-amber {
+  color: var(--color-warn);
+  text-shadow:
+    0 0 6px rgba(255, 179, 71, 0.7),
+    0 0 18px rgba(255, 179, 71, 0.35);
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.86; }
+  94% { opacity: 1; }
+  97% { opacity: 0.93; }
+}
+
+.crt-flicker {
+  animation: crt-flicker 3s infinite steps(1);
+}
+
+@keyframes boot-line-in {
+  from { opacity: 0; transform: translateX(-0.4rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.boot-line {
+  animation: boot-line-in 90ms ease-out both;
+}

@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ContentGate } from '@/components/ContentGate'
 import { useContentStore } from '@/stores/useContentStore'
 import { MathText } from '@/components/MathText'
 import { PointsBadge } from '@/components/PointsBadge'
-import { TimerPill } from '@/components/TimerPill'
+import { TimerPill, type TimerPhase } from '@/components/TimerPill'
 import { StreakPill } from '@/components/StreakPill'
 import { Button } from '@/components/Button'
 import { Card } from '@/components/Card'
@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { useGameStore, type AttemptRecord } from '@/stores/useGameStore'
 import { checkAnswer, type AnswerCheckResult } from '@/engine/answerChecker'
 import { computeEarnedPoints } from '@/engine/scoring'
+import { humEngine } from '@/lib/hum'
 import { cn } from '@/lib/format'
 import type { LoadedPack } from '@/engine/contentLoader'
 import type { Problem } from '@/types/problem'
@@ -89,6 +90,12 @@ function ProblemRunner({
   const bestStreak = useGameStore((s) => s.bestStreak)
   const recordAttempt = useGameStore((s) => s.recordAttempt)
 
+  // Ambient hum follows the trial clock; reset to steady on unmount.
+  const onTimerPhase = useCallback((phase: TimerPhase) => {
+    humEngine.setPhase(phase)
+  }, [])
+  useEffect(() => () => humEngine.setPhase('idle'), [])
+
   const codename = problem.title ?? `NODE-${String(problemIndex + 1).padStart(3, '0')}`
   const locked = submission !== null || expired
   const canSubmit = !locked && resolveCanSubmit(problem, answer)
@@ -158,6 +165,7 @@ function ProblemRunner({
           <TimerPill
             limitSeconds={problem.timeLimitSeconds}
             running={!locked}
+            onPhaseChange={onTimerPhase}
             onExpire={() => {
               // The window closed without a valid transmission — log it as
               // a failed node so streaks and debrief telemetry stay honest.

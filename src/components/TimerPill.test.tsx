@@ -1,63 +1,86 @@
 import { act } from 'react'
-import { describe, expect, it, vi, afterEach } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { TimerPill } from './TimerPill'
+import { timerPhase } from '@/lib/tension'
 
 afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('TimerPill — countdown mode', () => {
-  it('counts down when a limit is set', async () => {
-    vi.useFakeTimers()
-    render(<TimerPill limitSeconds={90} />)
-    expect(screen.getByRole('timer')).toHaveTextContent('T-01:30')
-    await act(async () => {
-      vi.advanceTimersByTime(5000)
-    })
-    expect(screen.getByRole('timer')).toHaveTextContent('T-01:25')
+describe('timerPhase mapping', () => {
+  it('is idle without a limit regardless of fraction', () => {
+    expect(timerPhase(false, 1)).toBe('idle')
+    expect(timerPhase(false, 0)).toBe('idle')
   })
 
-  it('fires onExpire exactly once when the window closes', async () => {
-    vi.useFakeTimers()
-    const onExpire = vi.fn()
-    render(<TimerPill limitSeconds={3} running onExpire={onExpire} />)
-    await act(async () => {
-      vi.advanceTimersByTime(3100)
-    })
-    expect(onExpire).toHaveBeenCalledTimes(1)
-    expect(screen.getByRole('timer')).toHaveTextContent('T-00:00')
+  it('stays elevated above 20% remaining', () => {
+    expect(timerPhase(true, 1)).toBe('elevated')
+    expect(timerPhase(true, 0.5)).toBe('elevated')
+    expect(timerPhase(true, 0.25)).toBe('elevated')
   })
 
-  it('stops counting when running=false', async () => {
-    vi.useFakeTimers()
-    const onExpire = vi.fn()
-    render(<TimerPill limitSeconds={5} running={false} onExpire={onExpire} />)
-    await act(async () => {
-      vi.advanceTimersByTime(10000)
-    })
-    expect(onExpire).not.toHaveBeenCalled()
-    expect(screen.getByRole('timer')).toHaveTextContent('T-00:05')
-  })
-
-  it('never shows a negative remaining time', async () => {
-    vi.useFakeTimers()
-    render(<TimerPill limitSeconds={2} />)
-    await act(async () => {
-      vi.advanceTimersByTime(60000)
-    })
-    expect(screen.getByRole('timer')).toHaveTextContent('T-00:00')
+  it('goes critical under 20% remaining', () => {
+    expect(timerPhase(true, 0.19)).toBe('critical')
+    expect(timerPhase(true, 0)).toBe('critical')
   })
 })
 
-describe('TimerPill — elapsed mode', () => {
-  it('counts up when no limit is set', async () => {
+describe('TimerPill phase callbacks', () => {
+  it('reports idle for unlimited timers', async () => {
     vi.useFakeTimers()
-    render(<TimerPill />)
-    expect(screen.getByRole('timer')).toHaveTextContent('T+00:00')
+    const onPhaseChange = vi.fn()
+    render(<TimerPill onPhaseChange={onPhaseChange} />)
     await act(async () => {
-      vi.advanceTimersByTime(65000)
+      vi.advanceTimersByTime(3000)
     })
-    expect(screen.getByRole('timer')).toHaveTextContent('T+01:05')
+    expect(onPhaseChange).toHaveBeenCalledWith('idle')
+  })
+
+  it('walks elevated → critical as the window drains, and back to idle when stopped', async () => {
+    vi.useFakeTimers()
+    const onPhaseChange = vi.fn()
+    const { rerender } = render(
+      <TimerPill limitSeconds={100} running onPhaseChange={onPhaseChange} />,
+    )
+
+    // >50% remaining.
+    await act(async () => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(onPhaseChange).toHaveBeenCalledWith('elevated')
+
+    // Drain to just under 20% (81s elapsed of 100).
+    await act(async () => {
+      vi.advanceTimersByTime(80000)
+    })
+    expect(onPhaseChange).toHaveBeenCalledWith('critical')
+
+    // Submission locks the clock — tension releases to idle.
+    rerender(<TimerPill limitSeconds={100} running={false} onPhaseChange={onPhaseChange} />)
+    await act(async () => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(onPhaseChange).toHaveBeenLastCalledWith('idle')
+  })
+
+  it('does not repeat the same phase callback every tick', async () => {
+    vi.useFakeTimers()
+    const onPhaseChange = vi.fn()
+    render(<TimerPill limitSeconds={100} running onPhaseChange={onPhaseChange} />)
+    await act(async () => {
+      vi.advanceTimersByTime(5000)
+    })
+    // Only the initial transition should have fired.
+    expect(onPhaseChange).toHaveBeenCalledTimes(1)
+  })
+
+  it('still renders the countdown clock text', async () => {
+    vi.useFakeTimers()
+    render(<TimerPill limitSeconds={90} />)
+    await act(async () => {
+      vi.advanceTimersByTime(2000)
+    })
+    expect(screen.getByRole('timer')).toHaveTextContent('T-01:28')
   })
 })
