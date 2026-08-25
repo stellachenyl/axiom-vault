@@ -30,7 +30,10 @@ export function getContentSource(): ContentSource {
 
 let cachedLoad: Promise<ContentLoadResult> | null = null
 
-export function loadProblemContent(): Promise<ContentLoadResult> {
+export function loadProblemContent(
+  options: { fresh?: boolean } = {},
+): Promise<ContentLoadResult> {
+  if (options.fresh) cachedLoad = null
   cachedLoad ??= loadContent().catch((error) => {
     cachedLoad = null
     throw error

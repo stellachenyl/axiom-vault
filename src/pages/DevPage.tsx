@@ -65,7 +65,7 @@ export function DevPage() {
           </div>
           <div className="flex justify-end px-4 py-2">
             <button
-              onClick={() => void load()}
+              onClick={() => void load({ fresh: true })}
               className="cursor-pointer rounded border border-edge-bright px-3 py-1 text-[10px] tracking-widest uppercase transition-colors hover:border-signal hover:text-signal"
             >
               Force reload

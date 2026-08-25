@@ -11,7 +11,7 @@ interface ContentState {
   packs: LoadedPack[]
   warnings: string[]
   error: string | null
-  load: () => Promise<void>
+  load: (options?: { fresh?: boolean }) => Promise<void>
 }
 
 export const useContentStore = create<ContentState>()((set) => ({
@@ -21,12 +21,12 @@ export const useContentStore = create<ContentState>()((set) => ({
   warnings: [],
   error: null,
 
-  load: async () => {
+  load: async ({ fresh = false }: { fresh?: boolean } = {}) => {
     const current = useContentStore.getState()
     if (current.status === 'loading') return
     set({ status: 'loading', error: null })
     try {
-      const result = await loadProblemContent()
+      const result = await loadProblemContent({ fresh })
       set({
         status: 'ready',
         source: result.source,
