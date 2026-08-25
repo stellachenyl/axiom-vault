@@ -1,5 +1,14 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { ClearanceTier } from '@/types'
+
+export interface AttemptRecord {
+  problemId: string
+  packId: string
+  correct: boolean
+  pointsAwarded: number
+  hintsUsed: number
+}
 
 interface GameState {
   totalPoints: number
@@ -9,11 +18,14 @@ interface GameState {
   completedProblems: string[]
   hintsUsed: number
   lastPlayedPackId: string | null
+  /** Per-submission telemetry backing the results debrief. */
+  attemptLog: AttemptRecord[]
 }
 
 interface GameActions {
   addPoints: (amount: number) => void
   registerCompletion: (problemId: string, points: number) => void
+  recordAttempt: (attempt: AttemptRecord) => void
   breakStreak: () => void
   unlockVault: (vaultId: string) => void
   useHint: () => void
@@ -27,39 +39,75 @@ const initialState: GameState = {
   totalPoints: 0,
   currentStreak: 0,
   bestStreak: 0,
-  unlockedVaults: ['vault-alpha'],
+  unlockedVaults: ['vault-00-calibration'],
   completedProblems: [],
   hintsUsed: 0,
   lastPlayedPackId: null,
+  attemptLog: [],
 }
 
-export const useGameStore = create<GameState & GameActions>()((set) => ({
-  ...initialState,
+const STORAGE_KEY = 'axiom-vault-progress'
 
-  addPoints: (amount) => set((s) => ({ totalPoints: s.totalPoints + amount })),
+export const useGameStore = create<GameState & GameActions>()(
+  persist(
+    (set) => ({
+      ...initialState,
 
-  registerCompletion: (problemId, points) =>
-    set((s) => ({
-      completedProblems: s.completedProblems.includes(problemId)
-        ? s.completedProblems
-        : [...s.completedProblems, problemId],
-      currentStreak: s.currentStreak + 1,
-      bestStreak: Math.max(s.bestStreak, s.currentStreak + 1),
-      totalPoints: s.totalPoints + points,
-    })),
+      addPoints: (amount) => set((s) => ({ totalPoints: s.totalPoints + amount })),
 
-  breakStreak: () => set({ currentStreak: 0 }),
+      registerCompletion: (problemId, points) =>
+        set((s) => ({
+          completedProblems: s.completedProblems.includes(problemId)
+            ? s.completedProblems
+            : [...s.completedProblems, problemId],
+          currentStreak: s.currentStreak + 1,
+          bestStreak: Math.max(s.bestStreak, s.currentStreak + 1),
+          totalPoints: s.totalPoints + points,
+        })),
 
-  unlockVault: (vaultId) =>
-    set((s) => ({
-      unlockedVaults: s.unlockedVaults.includes(vaultId)
-        ? s.unlockedVaults
-        : [...s.unlockedVaults, vaultId],
-    })),
+      recordAttempt: ({ problemId, pointsAwarded, ...rest }) =>
+        set((s) => {
+          const firstClear = rest.correct && !s.completedProblems.includes(problemId)
+          const streak = rest.correct ? s.currentStreak + 1 : 0
+          return {
+            totalPoints: s.totalPoints + pointsAwarded,
+            currentStreak: streak,
+            bestStreak: Math.max(s.bestStreak, streak),
+            completedProblems: firstClear
+              ? [...s.completedProblems, problemId]
+              : s.completedProblems,
+            lastPlayedPackId: rest.packId,
+            attemptLog: [...s.attemptLog, { problemId, pointsAwarded, ...rest }],
+          }
+        }),
 
-  useHint: () => set((s) => ({ hintsUsed: s.hintsUsed + 1 })),
+      breakStreak: () => set({ currentStreak: 0 }),
 
-  setLastPlayedPack: (packId) => set({ lastPlayedPackId: packId }),
+      unlockVault: (vaultId) =>
+        set((s) => ({
+          unlockedVaults: s.unlockedVaults.includes(vaultId)
+            ? s.unlockedVaults
+            : [...s.unlockedVaults, vaultId],
+        })),
 
-  resetRun: () => set(initialState),
-}))
+      useHint: () => set((s) => ({ hintsUsed: s.hintsUsed + 1 })),
+
+      setLastPlayedPack: (packId) => set({ lastPlayedPackId: packId }),
+
+      resetRun: () => set(initialState),
+    }),
+    {
+      name: STORAGE_KEY,
+      partialize: (s) => ({
+        totalPoints: s.totalPoints,
+        currentStreak: s.currentStreak,
+        bestStreak: s.bestStreak,
+        unlockedVaults: s.unlockedVaults,
+        completedProblems: s.completedProblems,
+        hintsUsed: s.hintsUsed,
+        lastPlayedPackId: s.lastPlayedPackId,
+        attemptLog: s.attemptLog,
+      }),
+    },
+  ),
+)
