@@ -1,0 +1,24 @@
+{
+  "id": "cal-03-core-alignment",
+  "kind": "text",
+  "title": "Core Alignment",
+  "statementMarkdown": "The calibration core demands an alignment key before it will accept new geometry.\n\nThe key is the number of trailing zeros in the decimal expansion of $100!$ (one hundred factorial).\n\nTransmit the key as a plain integer.",
+  "points": 200,
+  "timeLimitSeconds": 300,
+  "hints": [
+    "Trailing zeros come from factors of 10 — each one needs both a 2 and a 5.",
+    "Twos are plentiful. Count how many times factor 5 divides into 100! (don't forget higher powers of 5)."
+  ],
+  "hiddenTags": [
+    "number-theory",
+    "factorial"
+  ],
+  "answer": {
+    "type": "text",
+    "acceptedAnswers": [
+      "24"
+    ],
+    "caseSensitive": false,
+    "trimWhitespace": true
+  }
+}

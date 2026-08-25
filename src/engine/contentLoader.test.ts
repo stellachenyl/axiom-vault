@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { makeValidManifest, makeValidPack } from '@/test/fixtures'
+import {
+  makeFetchHandler,
+  makeValidManifest,
+  makeValidPackFile,
+  VALID_NUMERIC_PROBLEM,
+} from '@/test/fixtures'
 
 /**
  * The loader caches per module instance, so each test gets a fresh module
@@ -36,48 +41,44 @@ afterEach(() => {
 })
 
 describe('contentLoader', () => {
-  it('loads from VITE_PROBLEM_BASE_URL when set and fetch succeeds', async () => {
+  it('loads from VITE_PROBLEM_BASE_URL when set and resolves problem refs', async () => {
     vi.stubEnv('VITE_PROBLEM_BASE_URL', BASE)
-    const pack = makeValidPack()
+    const packFile = makeValidPackFile()
     const manifest = makeValidManifest(1)
-    const fetchMock = mockFetch((url) => {
-      if (url === `${BASE}/manifest.json`) return jsonResponse(manifest)
-      if (url === `${BASE}/packs/${manifest.packs[0].file}`) return jsonResponse(pack)
-      throw new Error(`unexpected url ${url}`)
-    })
+    const fetchMock = mockFetch(makeFetchHandler(manifest, packFile))
 
     const { loadProblemContent } = await importLoader()
     const result = await loadProblemContent({ fresh: true })
 
     expect(fetchMock).toHaveBeenCalledWith(`${BASE}/manifest.json`)
+    expect(fetchMock).toHaveBeenCalledWith(`${BASE}/packs/${manifest.packs[0].file}`)
+    expect(fetchMock).toHaveBeenCalledWith(`${BASE}/problems/${VALID_NUMERIC_PROBLEM.id}.json`)
     expect(result.source.remote).toBe(true)
     expect(result.source.baseUrl).toBe(BASE)
     expect(result.packs).toHaveLength(1)
-    expect(result.packs[0].pack.packId).toBe(pack.packId)
+    // Refs are resolved into full problem records, in manifest order.
+    expect(result.packs[0].pack.problems.map((p) => p.id)).toEqual(packFile.problems)
     expect(result.warnings).toEqual([])
   })
 
   it('falls back to local /problem-packs when the env variable is absent', async () => {
-    const pack = makeValidPack()
     const manifest = makeValidManifest(1)
-    const fetchMock = mockFetch((url) => {
-      if (url === '/problem-packs/manifest.json') return jsonResponse(manifest)
-      if (url === `/problem-packs/packs/${manifest.packs[0].file}`) return jsonResponse(pack)
-      throw new Error(`unexpected url ${url}`)
-    })
+    mockFetch(makeFetchHandler(manifest, makeValidPackFile()))
 
     const { loadProblemContent } = await importLoader()
     const result = await loadProblemContent({ fresh: true })
 
-    expect(fetchMock).toHaveBeenCalledWith('/problem-packs/manifest.json')
     expect(result.source.remote).toBe(false)
     expect(result.source.baseUrl).toBe('/problem-packs')
     expect(result.packs).toHaveLength(1)
+    expect(result.packs[0].pack.problems).toHaveLength(3)
   })
 
   it('trailing slashes in the base URL are stripped', async () => {
     vi.stubEnv('VITE_PROBLEM_BASE_URL', `${BASE}///`)
-    mockFetch(() => jsonResponse(makeValidManifest(0)))
+    mockFetch((url) =>
+      url.endsWith('manifest.json') ? jsonResponse(makeValidManifest(0)) : jsonResponse({}, 404),
+    )
     const { loadProblemContent } = await importLoader()
     const result = await loadProblemContent({ fresh: true })
     expect(result.source.baseUrl).toBe(BASE)
@@ -125,12 +126,10 @@ describe('contentLoader', () => {
 
   it('warns and skips a pack that fails Zod validation', async () => {
     const manifest = makeValidManifest(1)
-    const badPack = makeValidPack()
+    const badPack = makeValidPackFile()
     badPack.difficulty = 42
     mockFetch((url) =>
-      url.endsWith('manifest.json')
-        ? jsonResponse(manifest)
-        : jsonResponse(badPack),
+      url.endsWith('manifest.json') ? jsonResponse(manifest) : jsonResponse(badPack),
     )
     const { loadProblemContent } = await importLoader()
     const result = await loadProblemContent({ fresh: true })
@@ -138,12 +137,65 @@ describe('contentLoader', () => {
     expect(result.warnings.join('\n')).toContain('difficulty')
   })
 
+  it('warns and skips an individual problem file that is missing or invalid', async () => {
+    const manifest = makeValidManifest(1)
+    const brokenProblem = { ...VALID_NUMERIC_PROBLEM, points: -5 }
+    mockFetch((url) => {
+      if (url.endsWith('manifest.json')) return jsonResponse(manifest)
+      if (url.includes('/packs/')) return jsonResponse(makeValidPackFile())
+      if (url.includes(`/${VALID_NUMERIC_PROBLEM.id}.json`)) return jsonResponse(brokenProblem)
+      if (url.includes('/fx-02-broken-relay.json')) return jsonResponse({}, 404)
+      // fx-03's slot returns a valid record with its own id.
+      return jsonResponse({ ...VALID_NUMERIC_PROBLEM, id: 'fx-03-core-alignment' })
+    })
+    const { loadProblemContent } = await importLoader()
+    const result = await loadProblemContent({ fresh: true })
+
+    // The vault still loads with its surviving anomalies.
+    expect(result.packs).toHaveLength(1)
+    expect(result.packs[0].pack.problems.map((p) => p.id)).toEqual(['fx-03-core-alignment'])
+    expect(result.warnings).toHaveLength(2)
+    expect(result.warnings.join('\n')).toContain('points')
+    expect(result.warnings.join('\n')).toContain('fx-02-broken-relay')
+  })
+
+  it('warns on duplicate refs inside a pack but keeps one copy in order', async () => {
+    const manifest = makeValidManifest(1)
+    const packFile = makeValidPackFile({
+      problems: [VALID_NUMERIC_PROBLEM.id, VALID_NUMERIC_PROBLEM.id],
+    })
+    mockFetch(makeFetchHandler(manifest, packFile))
+    const { loadProblemContent } = await importLoader()
+    const result = await loadProblemContent({ fresh: true })
+    expect(result.packs[0].pack.problems.map((p) => p.id)).toEqual([VALID_NUMERIC_PROBLEM.id])
+    expect(result.warnings.join('\n')).toMatch(/duplicate reference/)
+  })
+
+  it('preserves ref order even when problems resolve out of network order', async () => {
+    const manifest = makeValidManifest(1)
+    const packFile = makeValidPackFile({
+      problems: ['fx-03-core-alignment', 'fx-01-signal-check'],
+    })
+    // Stagger response times so later refs would finish first without
+    // Promise.all's order preservation.
+    const handler = makeFetchHandler(manifest, packFile)
+    mockFetch(async (url) => {
+      const response = handler(url)
+      if (url.includes('fx-03')) await new Promise((r) => setTimeout(r, 20))
+      return response
+    })
+    const { loadProblemContent } = await importLoader()
+    const result = await loadProblemContent({ fresh: true })
+    expect(result.packs[0].pack.problems.map((p) => p.id)).toEqual([
+      'fx-03-core-alignment',
+      'fx-01-signal-check',
+    ])
+  })
+
   it('warns when packId does not match the manifest entry id', async () => {
     const manifest = makeValidManifest(1)
-    const mismatchedPack = makeValidPack({ packId: 'some-other-vault' })
-    mockFetch((url) =>
-      url.endsWith('manifest.json') ? jsonResponse(manifest) : jsonResponse(mismatchedPack),
-    )
+    const mismatchedPack = makeValidPackFile({ packId: 'some-other-vault' })
+    mockFetch(makeFetchHandler(manifest, mismatchedPack))
     const { loadProblemContent } = await importLoader()
     const result = await loadProblemContent({ fresh: true })
     expect(result.packs).toHaveLength(1) // still usable
@@ -154,7 +206,7 @@ describe('contentLoader', () => {
     const manifest = makeValidManifest(1)
     let calls = 0
     mockFetch((url) => {
-      if (!url.endsWith('manifest.json')) return jsonResponse(makeValidPack())
+      if (!url.endsWith('manifest.json')) return jsonResponse({})
       calls += 1
       return jsonResponse(manifest)
     })

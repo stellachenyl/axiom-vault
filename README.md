@@ -56,24 +56,29 @@ Tests cover the scoring engine (`src/engine/scoring.test.ts`), answer checking
 npm run validate:problems
 ```
 
-Reads every JSON file under `problem-packs/packs/` plus the manifest, validates them
-against the Zod schemas in `src/types/problem.ts`, prints per-file errors, and exits
-with a non-zero code on failure. The GitHub Pages workflow runs this before building.
+Validates the manifest, every pack file under `problem-packs/packs/`, and every
+problem file under `problem-packs/problems/` against the Zod schemas in
+`src/types/problem.ts`. It also cross-checks references: dangling problem refs,
+orphaned problem files not referenced by any pack, and duplicate ids are all
+reported. Exits with a non-zero code on failure.
 
-## Add a new problem pack
+## Add a new vault (problem pack)
 
-1. Create `problem-packs/packs/<your-pack>.json` following the pack schema — see
-   `problem-packs/packs/vault-00-calibration.json` as the reference.
+1. Create one `problem-packs/problems/<problem-id>.json` per anomaly — see any
+   file in `problem-packs/problems/` as a reference.
    - One numeric, one choice, and one exact-text problem type are supported.
    - Statements support Markdown and LaTeX (`$…$` inline, `$$…$$` block).
    - `hiddenTags` are internal metadata; never reference them in UI copy.
-2. Register it in `problem-packs/manifest.json` with a unique `id`, `difficulty`
+2. Create `problem-packs/packs/<your-pack>.json` with pack metadata and an
+   ordered list of problem ids (`problems: ["id-1", "id-2", …]`).
+3. Register it in `problem-packs/manifest.json` with a unique `id`, `difficulty`
    (1–10) and `file` name.
-3. Run `npm run validate:problems` — fix any reported issues.
-4. Mirror both files into `public/problem-packs/` so local development picks them up.
+4. Run `npm run validate:problems` — fix any reported issues.
+5. Mirror everything into `public/problem-packs/` so local development picks it up.
 
-The loader rejects invalid packs at runtime and surfaces warnings on the `/dev` page,
-so one bad file cannot take down the whole grid.
+The loader rejects invalid packs at runtime and surfaces warnings on the `/dev`
+page, so one bad file cannot take down the whole grid — it only drops that
+anomaly from the vault.
 
 ## Publish problems via GitHub
 

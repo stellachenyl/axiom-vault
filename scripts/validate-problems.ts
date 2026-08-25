@@ -1,17 +1,30 @@
 /**
- * Validates all problem pack JSON files under problem-packs/ against the
- * Zod schemas in src/types/problem.ts.
+ * Validates all problem content under problem-packs/ against the Zod
+ * schemas in src/types/problem.ts:
+ *
+ *   - manifest.json
+ *   - packs/*.json          (pack metadata + ordered problem id refs)
+ *   - problems/*.json       (one Problem per file)
+ *
+ * Also cross-checks refs: dangling references, orphaned problem files and
+ * duplicate problem ids are all reported.
  *
  * Usage: npm run validate:problems
- * Exits with a non-zero code if the manifest or any pack fails validation.
+ * Exits with a non-zero code if anything fails validation.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { manifestSchema, problemPackSchema } from '../src/types/problem'
+import {
+  manifestSchema,
+  problemPackFileSchema,
+  problemSchema,
+} from '../src/types/problem'
+import type { Problem } from '../src/types/problem'
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const packsDir = join(repoRoot, 'problem-packs', 'packs')
+const problemsDir = join(repoRoot, 'problem-packs', 'problems')
 const manifestPath = join(repoRoot, 'problem-packs', 'manifest.json')
 
 let failed = false
@@ -36,18 +49,30 @@ function formatIssues(issues: { path: (string | number | symbol)[]; message: str
   return issues.map((issue) => `${issue.path.join('.') || '(root)'} — ${issue.message}`)
 }
 
+function loadJson(path: string): { ok: true; data: unknown } | { ok: false; error: string } {
+  try {
+    return { ok: true, data: JSON.parse(readFileSync(path, 'utf-8')) }
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) }
+  }
+}
+
 console.log('Validating problem content...\n')
 
+// --- manifest ------------------------------------------------------------
 if (!existsSync(manifestPath)) {
   fail(`manifest not found at ${manifestPath}`)
   process.exit(1)
 }
 
-const manifestResult = manifestSchema.safeParse(
-  JSON.parse(readFileSync(manifestPath, 'utf-8')),
-)
+const referencedProblemIds = new Set<string>()
+
+const manifestLoaded = loadJson(manifestPath)
+const manifestResult = manifestLoaded.ok
+  ? manifestSchema.safeParse(manifestLoaded.data)
+  : { success: false, error: { issues: [{ path: [], message: manifestLoaded.error }] } }
 if (!manifestResult.success) {
-  console.error(`manifest.json:`)
+  console.error('manifest.json:')
   for (const detail of formatIssues(manifestResult.error.issues)) fail(detail)
 } else {
   console.log(`✓ manifest.json (${manifestResult.data.packs.length} entries)`)
@@ -56,37 +81,79 @@ if (!manifestResult.success) {
     fail(`manifest.json: contains duplicate pack id(s): ${duplicatePackIds.join(', ')}`)
 }
 
-if (!existsSync(packsDir)) {
-  fail(`packs directory not found at ${packsDir}`)
-  process.exit(1)
+// --- individual problems ---------------------------------------------------
+const problemFilesById = new Map<string, string>()
+const parsedProblems = new Map<string, Problem>()
+
+if (!existsSync(problemsDir)) {
+  fail(`problems directory not found at ${problemsDir}`)
+} else {
+  for (const file of readdirSync(problemsDir).filter((f) => f.endsWith('.json')).sort()) {
+    const loaded = loadJson(join(problemsDir, file))
+    if (!loaded.ok) {
+      fail(`${file}: invalid JSON (${loaded.error})`)
+      continue
+    }
+    const result = problemSchema.safeParse(loaded.data)
+    if (!result.success) {
+      console.error(`problems/${file}:`)
+      for (const detail of formatIssues(result.error.issues)) fail(detail)
+      continue
+    }
+    const problem = result.data
+    if (problemFilesById.has(problem.id)) {
+      fail(`problems/${file}: duplicate problem id "${problem.id}" (also in ${problemFilesById.get(problem.id)})`)
+      continue
+    }
+    problemFilesById.set(problem.id, `problems/${file}`)
+    parsedProblems.set(problem.id, problem)
+  }
+  console.log(
+    `✓ ${problemFilesById.size} problem file(s) validated (${readdirSync(problemsDir).filter((f) => f.endsWith('.json')).length} on disk)`,
+  )
 }
 
-const files = readdirSync(packsDir).filter((f) => f.endsWith('.json')).sort()
+// --- packs -----------------------------------------------------------------
+if (!existsSync(packsDir)) {
+  fail(`packs directory not found at ${packsDir}`)
+} else {
+  for (const file of readdirSync(packsDir).filter((f) => f.endsWith('.json')).sort()) {
+    const loaded = loadJson(join(packsDir, file))
+    if (!loaded.ok) {
+      fail(`${file}: invalid JSON (${loaded.error})`)
+      continue
+    }
 
-for (const file of files) {
-  const path = join(packsDir, file)
-  let raw: unknown
-  try {
-    raw = JSON.parse(readFileSync(path, 'utf-8'))
-  } catch (error) {
-    fail(`${file}: invalid JSON (${error instanceof Error ? error.message : String(error)})`)
-    continue
+    const result = problemPackFileSchema.safeParse(loaded.data)
+    if (!result.success) {
+      console.error(`${file}:`)
+      for (const detail of formatIssues(result.error.issues)) fail(`  ${detail}`)
+      continue
+    }
+
+    const pack = result.data
+    console.log(
+      `✓ ${file} — "${pack.packId}" · difficulty ${pack.difficulty} · ${pack.problems.length} problem ref(s)`,
+    )
+
+    const duplicateRefs = findDuplicateIds(pack.problems)
+    if (duplicateRefs.length > 0)
+      fail(`${file}: contains duplicate problem ref(s): ${duplicateRefs.join(', ')}`)
+
+    for (const ref of pack.problems) {
+      referencedProblemIds.add(ref)
+      if (!parsedProblems.has(ref)) {
+        fail(`${file}: references missing or invalid problem "${ref}"`)
+      }
+    }
   }
+}
 
-  const result = problemPackSchema.safeParse(raw)
-  if (!result.success) {
-    console.error(`${file}:`)
-    for (const detail of formatIssues(result.error.issues)) fail(`  ${detail}`)
-    continue
+// --- orphaned problems -------------------------------------------------------
+for (const [id, origin] of problemFilesById) {
+  if (!referencedProblemIds.has(id)) {
+    fail(`${origin}: problem "${id}" is not referenced by any pack`)
   }
-
-  const pack = result.data
-  const duplicateProblemIds = findDuplicateIds(pack.problems.map((p) => p.id))
-  console.log(
-    `✓ ${file} — "${pack.packId}" · difficulty ${pack.difficulty} · ${pack.problems.length} problems`,
-  )
-  if (duplicateProblemIds.length > 0)
-    fail(`${file}: contains duplicate problem id(s): ${duplicateProblemIds.join(', ')}`)
 }
 
 console.log('')
