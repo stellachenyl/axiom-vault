@@ -1,0 +1,20 @@
+{
+  "id": "sd-03-checksum",
+  "kind": "numeric",
+  "title": "Checksum",
+  "statementMarkdown": "A checksum routine expands a carrier wave as $2^{20}$ and then sums every digit of the resulting decimal readout.\n\n**What checksum does the console display?**",
+  "points": 160,
+  "timeLimitSeconds": 180,
+  "hints": [
+    "First expand $2^{20}$ exactly — it is a seven-digit number.",
+    "Add each digit individually; order does not matter."
+  ],
+  "hiddenTags": [
+    "digit-sum"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 31,
+    "tolerance": 0
+  }
+}

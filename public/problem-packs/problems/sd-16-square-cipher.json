@@ -1,0 +1,38 @@
+{
+  "id": "sd-16-square-cipher",
+  "kind": "choice",
+  "title": "Square Cipher",
+  "statementMarkdown": "A cipher lock displays a **perfect square** between **300 and 400** whose **digits sum to exactly 9**.\n\n**Which value unlocks the cipher?**",
+  "points": 240,
+  "timeLimitSeconds": 270,
+  "hints": [
+    "List the squares in range — only two exist between 300 and 400.",
+    "One candidate passes the digit-sum check, the other sums to 10."
+  ],
+  "hiddenTags": [
+    "perfect-squares",
+    "digit-sum"
+  ],
+  "answer": {
+    "type": "choice",
+    "options": [
+      {
+        "id": "opt-a",
+        "labelMarkdown": "$289$"
+      },
+      {
+        "id": "opt-b",
+        "labelMarkdown": "$324$"
+      },
+      {
+        "id": "opt-c",
+        "labelMarkdown": "$361$"
+      },
+      {
+        "id": "opt-d",
+        "labelMarkdown": "$225$"
+      }
+    ],
+    "correctOptionId": "opt-b"
+  }
+}

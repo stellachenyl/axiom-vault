@@ -1,0 +1,21 @@
+{
+  "id": "sd-04-drift-fracture",
+  "kind": "numeric",
+  "title": "Drift Fracture",
+  "statementMarkdown": "A legacy stabilizer claims the reading $f(n) = n^2 + n + 41$ stays indivisible for every cycle $n$.\n\nThe claim is a lie. **Find the first cycle $n$ where $f(n)$ splits into a product of two smaller positive integers.**",
+  "points": 220,
+  "timeLimitSeconds": 300,
+  "hints": [
+    "Test small cycles — the stabilizer holds up longer than you would expect.",
+    "At the fracture point, the value is a perfect square: $41 \\times 41$."
+  ],
+  "hiddenTags": [
+    "quadratics",
+    "primes"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 40,
+    "tolerance": 0
+  }
+}

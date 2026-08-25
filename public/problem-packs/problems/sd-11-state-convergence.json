@@ -1,0 +1,38 @@
+{
+  "id": "sd-11-state-convergence",
+  "kind": "choice",
+  "title": "State Convergence",
+  "statementMarkdown": "Four relays couple input to output at different ratios:\n\n$$\\frac{3}{7}, \\quad \\frac{5}{11}, \\quad \\frac{7}{15}, \\quad \\frac{9}{19}$$\n\nThe grid converges on whichever relay carries the **strongest coupling** (largest ratio).\n\n**Which relay wins?**",
+  "points": 200,
+  "timeLimitSeconds": 240,
+  "hints": [
+    "Compare pairwise by cross-multiplication instead of dividing.",
+    "For $\\frac{a}{b}$ vs $\\frac{c}{d}$: compare $ad$ against $bc$."
+  ],
+  "hiddenTags": [
+    "fractions",
+    "inequalities"
+  ],
+  "answer": {
+    "type": "choice",
+    "options": [
+      {
+        "id": "opt-a",
+        "labelMarkdown": "$\\frac{3}{7}$"
+      },
+      {
+        "id": "opt-b",
+        "labelMarkdown": "$\\frac{5}{11}$"
+      },
+      {
+        "id": "opt-c",
+        "labelMarkdown": "$\\frac{7}{15}$"
+      },
+      {
+        "id": "opt-d",
+        "labelMarkdown": "$\\frac{9}{19}$"
+      }
+    ],
+    "correctOptionId": "opt-d"
+  }
+}

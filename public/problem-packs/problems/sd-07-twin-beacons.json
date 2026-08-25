@@ -1,0 +1,20 @@
+{
+  "id": "sd-07-twin-beacons",
+  "kind": "numeric",
+  "title": "Twin Beacons",
+  "statementMarkdown": "Two beacons flash every **8** and **12** seconds respectively. They flash together at $t = 0$, then drift apart.\n\n**At how many seconds $t > 0$ do they next flash together?**",
+  "points": 130,
+  "timeLimitSeconds": 150,
+  "hints": [
+    "Both intervals must divide the waiting time evenly.",
+    "Half of 24 works for neither beacon alone — check divisibility, not averages."
+  ],
+  "hiddenTags": [
+    "lcm"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 24,
+    "tolerance": 0
+  }
+}

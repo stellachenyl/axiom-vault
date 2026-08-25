@@ -1,0 +1,22 @@
+{
+  "id": "sd-12-keystone",
+  "kind": "text",
+  "title": "Keystone",
+  "statementMarkdown": "The keystone slot accepts only a number that equals the **sum of all its proper divisors** — a completeness the ancients called *perfect*.\n\n**Transmit the smallest keystone value.**",
+  "points": 180,
+  "timeLimitSeconds": 180,
+  "hints": [
+    "Check small candidates: does 1 + 2 + 3 land back on the number itself?",
+    "Proper divisors exclude the number itself."
+  ],
+  "hiddenTags": [
+    "perfect-numbers"
+  ],
+  "answer": {
+    "type": "text",
+    "acceptedAnswers": [
+      "6"
+    ],
+    "trimWhitespace": true
+  }
+}
