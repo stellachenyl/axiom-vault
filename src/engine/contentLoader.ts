@@ -1,6 +1,10 @@
 import type { z } from 'zod'
-import { manifestSchema, problemPackSchema } from '@/types/problem'
-import type { ContentManifest, ManifestEntry, ProblemPack } from '@/types/problem'
+import {
+  manifestSchema,
+  problemPackFileSchema,
+  problemSchema,
+} from '@/types/problem'
+import type { ContentManifest, ManifestEntry, Problem, ProblemPack } from '@/types/problem'
 
 export interface ContentSource {
   /** Base URL problem content is fetched from (no trailing slash). */
@@ -53,6 +57,46 @@ function formatZodIssues(scope: string, issues: z.ZodError['issues']): string[] 
   return issues.map((issue) => `${scope}: ${issue.path.join('.')} — ${issue.message}`)
 }
 
+/**
+ * Resolves a pack's ordered list of problem ids into validated Problem
+ * records. A missing or invalid problem file is skipped with a warning so
+ * one bad anomaly cannot take down the vault; order is preserved.
+ */
+async function resolvePackProblems(
+  scope: string,
+  ids: readonly string[],
+  source: ContentSource,
+): Promise<{ problems: Problem[]; warnings: string[] }> {
+  const warnings: string[] = []
+  const seen = new Set<string>()
+
+  const results = await Promise.all(
+    ids.map(async (id) => {
+      if (seen.has(id)) {
+        warnings.push(`${scope}: duplicate reference to problem "${id}" — skipped`)
+        return null
+      }
+      seen.add(id)
+      try {
+        const raw = await fetchJson(`${source.baseUrl}/problems/${id}.json`)
+        const parsed = problemSchema.safeParse(raw)
+        if (!parsed.success) {
+          warnings.push(...formatZodIssues(`${scope} -> problems/${id}.json`, parsed.error.issues))
+          return null
+        }
+        return parsed.data
+      } catch (error) {
+        warnings.push(
+          `${scope} -> problems/${id}.json: failed to load (${error instanceof Error ? error.message : String(error)})`,
+        )
+        return null
+      }
+    }),
+  )
+
+  return { problems: results.filter((p): p is Problem => p !== null), warnings }
+}
+
 async function loadContent(): Promise<ContentLoadResult> {
   const source = getContentSource()
   const warnings: string[] = []
@@ -72,18 +116,32 @@ async function loadContent(): Promise<ContentLoadResult> {
       const url = `${source.baseUrl}/packs/${entry.file}`
       try {
         const rawPack = await fetchJson(url)
-        const parsedPack = problemPackSchema.safeParse(rawPack)
+        const parsedPack = problemPackFileSchema.safeParse(rawPack)
         if (!parsedPack.success) {
           warnings.push(...formatZodIssues(entry.file, parsedPack.error.issues))
           return
         }
-        const pack = parsedPack.data
-        if (pack.packId !== entry.id) {
+        const filePack = parsedPack.data
+        if (filePack.packId !== entry.id) {
           warnings.push(
-            `${entry.file}: packId "${pack.packId}" does not match manifest id "${entry.id}"`,
+            `${entry.file}: packId "${filePack.packId}" does not match manifest id "${entry.id}"`,
           )
         }
-        packs.push({ entry, pack })
+
+        const { problems, warnings: problemWarnings } = await resolvePackProblems(
+          entry.file,
+          filePack.problems,
+          source,
+        )
+        warnings.push(...problemWarnings)
+
+        packs.push({
+          entry,
+          pack: {
+            ...filePack,
+            problems,
+          },
+        })
       } catch (error) {
         warnings.push(`${entry.file}: failed to load (${error instanceof Error ? error.message : String(error)})`)
       }

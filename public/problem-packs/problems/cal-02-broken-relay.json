@@ -1,0 +1,39 @@
+{
+  "id": "cal-02-broken-relay",
+  "kind": "choice",
+  "title": "Broken Relay",
+  "statementMarkdown": "A three-state relay cycles in a fixed loop:\n\n$$S_0 \\rightarrow S_1 \\rightarrow S_2 \\rightarrow S_0$$\n\nThe relay advances one step for every divisor of $60$ — including the trivial ones.\n\nStarting from state $S_0$, which state is the relay in after all divisors have been processed?",
+  "points": 150,
+  "timeLimitSeconds": 240,
+  "hints": [
+    "Count every divisor of 60, including 1 and 60 themselves.",
+    "Only the count modulo 3 matters — the relay loops with period 3."
+  ],
+  "hiddenTags": [
+    "number-theory",
+    "divisors",
+    "modular"
+  ],
+  "answer": {
+    "type": "choice",
+    "options": [
+      {
+        "id": "opt-s0",
+        "labelMarkdown": "$S_0$ — relay resets to origin"
+      },
+      {
+        "id": "opt-s1",
+        "labelMarkdown": "$S_1$ — relay rests on first deflection"
+      },
+      {
+        "id": "opt-s2",
+        "labelMarkdown": "$S_2$ — relay parks at second deflection"
+      },
+      {
+        "id": "opt-jam",
+        "labelMarkdown": "The relay jams mid-cycle"
+      }
+    ],
+    "correctOptionId": "opt-s0"
+  }
+}

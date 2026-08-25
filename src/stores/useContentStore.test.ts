@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useContentStore } from './useContentStore'
-import { makeLoadedPack, makeValidManifest, makeValidPack } from '@/test/fixtures'
+import {
+  makeFetchHandler,
+  makeLoadedPack,
+  makeValidManifest,
+  makeValidPack,
+  makeValidPackFile,
+} from '@/test/fixtures'
 
 function jsonResponse(body: unknown, status = 200): Response {
   return {
@@ -28,9 +34,7 @@ describe('useContentStore.load', () => {
   it('transitions to ready and stores packs on a successful load', async () => {
     const pack = makeValidPack()
     const manifest = makeValidManifest(1)
-    mockFetch((url) =>
-      url.endsWith('manifest.json') ? jsonResponse(manifest) : jsonResponse(pack),
-    )
+    mockFetch(makeFetchHandler(manifest, makeValidPackFile()))
 
     await useContentStore.getState().load({ fresh: true })
 
@@ -54,7 +58,7 @@ describe('useContentStore.load', () => {
   })
 
   it('collects validation warnings without failing the whole load', async () => {
-    const badPack = makeValidPack()
+    const badPack = makeValidPackFile()
     badPack.difficulty = 99
     mockFetch((url) =>
       url.endsWith('manifest.json')
@@ -71,10 +75,8 @@ describe('useContentStore.load', () => {
   })
 
   it('ignores duplicate load calls while a load is already running', async () => {
-    const fetchMock = mockFetch((url) =>
-      url.endsWith('manifest.json')
-        ? jsonResponse(makeValidManifest(1))
-        : jsonResponse(makeValidPack()),
+    const fetchMock = mockFetch(
+      makeFetchHandler(makeValidManifest(1), makeValidPackFile()),
     )
 
     const first = useContentStore.getState().load({ fresh: true })

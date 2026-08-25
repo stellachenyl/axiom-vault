@@ -1,0 +1,21 @@
+{
+  "id": "cal-01-signal-check",
+  "kind": "numeric",
+  "title": "Signal Check",
+  "statementMarkdown": "A containment relay emits a pulse that feeds back into itself. The first pulse registers a strength of **1**.\n\nEvery subsequent pulse obeys the growth law:\n\n$$f(n) = 3f(n-1) + 2$$\n\nThe containment field fails the moment a pulse exceeds **1000**.\n\nDetermine the index $n$ of the first pulse that breaches the field.",
+  "points": 120,
+  "timeLimitSeconds": 180,
+  "hints": [
+    "Compute the first few pulses by hand — the sequence climbs fast.",
+    "Watch the boundary: you need the first pulse strictly greater than 1000, not equal to it."
+  ],
+  "hiddenTags": [
+    "sequences",
+    "recurrence"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 6,
+    "tolerance": 0
+  }
+}
