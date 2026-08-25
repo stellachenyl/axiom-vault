@@ -1,0 +1,81 @@
+{
+  "packId": "vault-00-calibration",
+  "title": "Vault 00: Calibration",
+  "codename": "CALIBRATION",
+  "difficulty": 3,
+  "description": "Initial sync trials. Baseline signal integrity check before deeper containment sectors unlock.",
+  "problems": [
+    {
+      "id": "cal-01-signal-check",
+      "kind": "numeric",
+      "title": "Signal Check",
+      "statementMarkdown": "A containment relay emits a pulse that feeds back into itself. The first pulse registers a strength of **1**.\n\nEvery subsequent pulse obeys the growth law:\n\n$$f(n) = 3f(n-1) + 2$$\n\nThe containment field fails the moment a pulse exceeds **1000**.\n\nDetermine the index $n$ of the first pulse that breaches the field.",
+      "points": 120,
+      "timeLimitSeconds": 180,
+      "hints": [
+        "Compute the first few pulses by hand — the sequence climbs fast.",
+        "Watch the boundary: you need the first pulse strictly greater than 1000, not equal to it."
+      ],
+      "hiddenTags": ["sequences", "recurrence"],
+      "answer": {
+        "type": "numeric",
+        "value": 6,
+        "tolerance": 0
+      }
+    },
+    {
+      "id": "cal-02-broken-relay",
+      "kind": "choice",
+      "title": "Broken Relay",
+      "statementMarkdown": "A three-state relay cycles in a fixed loop:\n\n$$S_0 \\rightarrow S_1 \\rightarrow S_2 \\rightarrow S_0$$\n\nThe relay advances one step for every divisor of $60$ — including the trivial ones.\n\nStarting from state $S_0$, which state is the relay in after all divisors have been processed?",
+      "points": 150,
+      "timeLimitSeconds": 240,
+      "hints": [
+        "Count every divisor of 60, including 1 and 60 themselves.",
+        "Only the count modulo 3 matters — the relay loops with period 3."
+      ],
+      "hiddenTags": ["number-theory", "divisors", "modular"],
+      "answer": {
+        "type": "choice",
+        "options": [
+          {
+            "id": "opt-s0",
+            "labelMarkdown": "$S_0$ — relay resets to origin"
+          },
+          {
+            "id": "opt-s1",
+            "labelMarkdown": "$S_1$ — relay rests on first deflection"
+          },
+          {
+            "id": "opt-s2",
+            "labelMarkdown": "$S_2$ — relay parks at second deflection"
+          },
+          {
+            "id": "opt-jam",
+            "labelMarkdown": "The relay jams mid-cycle"
+          }
+        ],
+        "correctOptionId": "opt-s0"
+      }
+    },
+    {
+      "id": "cal-03-core-alignment",
+      "kind": "text",
+      "title": "Core Alignment",
+      "statementMarkdown": "The calibration core demands an alignment key before it will accept new geometry.\n\nThe key is the number of trailing zeros in the decimal expansion of $100!$ (one hundred factorial).\n\nTransmit the key as a plain integer.",
+      "points": 200,
+      "timeLimitSeconds": 300,
+      "hints": [
+        "Trailing zeros come from factors of 10 — each one needs both a 2 and a 5.",
+        "Twos are plentiful. Count how many times factor 5 divides into 100! (don't forget higher powers of 5)."
+      ],
+      "hiddenTags": ["number-theory", "factorial"],
+      "answer": {
+        "type": "text",
+        "acceptedAnswers": ["24"],
+        "caseSensitive": false,
+        "trimWhitespace": true
+      }
+    }
+  ]
+}

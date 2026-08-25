@@ -1,0 +1,12 @@
+{
+  "packs": [
+    {
+      "id": "vault-00-calibration",
+      "title": "Vault 00: Calibration",
+      "codename": "CALIBRATION",
+      "difficulty": 3,
+      "file": "vault-00-calibration.json",
+      "description": "Initial sync trials. Baseline signal integrity check before deeper containment sectors unlock."
+    }
+  ]
+}
