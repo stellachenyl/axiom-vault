@@ -18,6 +18,8 @@ describe('TopBar', () => {
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument()
     expect(screen.getByText(/4,321 ap/i)).toBeInTheDocument()
     expect(screen.getByText(/streak 3/i)).toBeInTheDocument()
+    // The dev console must not be reachable from the public navigation.
+    expect(screen.queryByRole('link', { name: /dev console/i })).not.toBeInTheDocument()
   })
 
   it('navigates to mission select via keyboard', async () => {

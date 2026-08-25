@@ -103,6 +103,21 @@ VITE_PROBLEM_BASE_URL=https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOU
   `public/problem-packs/`, so development works offline.
 - The active source is displayed on the `/dev` console.
 
+## Dev console (operator access)
+
+The `/dev` diagnostics page is hidden from the public UI — there is no nav link,
+and direct visits show a "SECTOR OFFLINE" dead end.
+
+Operator access (no login system, by design):
+
+1. **Type `axiom` on any page** (outside of a text field) — the console unlocks
+   for that browser and navigates to `/dev`
+2. Or set `localStorage["axiom-vault-dev"] = "granted"` in devtools
+3. Re-lock with `localStorage.removeItem("axiom-vault-dev")`
+
+This is convenience hiding, not security — the console only exposes local
+diagnostics and a progress reset, never content answers.
+
 ## Deployment (Vercel)
 
 The demo deploys on [Vercel](https://vercel.com): import the repo, and Vercel

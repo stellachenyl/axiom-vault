@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/AppShell'
+import { DevAccess } from '@/components/DevAccess'
 import { HomePage } from '@/pages/HomePage'
 import { VaultPage } from '@/pages/VaultPage'
 import { ProblemPage } from '@/pages/ProblemPage'
@@ -14,7 +15,14 @@ export function App() {
         <Route path="/vault/:packId" element={<VaultPage />} />
         <Route path="/vault/:packId/problem/:problemId" element={<ProblemPage />} />
         <Route path="/results/:packId" element={<ResultsPage />} />
-        <Route path="/dev" element={<DevPage />} />
+        <Route
+          path="/dev"
+          element={
+            <DevAccess>
+              <DevPage />
+            </DevAccess>
+          }
+        />
         <Route path="*" element={<HomePage />} />
       </Route>
     </Routes>

@@ -1,7 +1,11 @@
 import { Outlet } from 'react-router-dom'
 import { TopBar } from './TopBar'
+import { useDevCodeListener } from '@/lib/devAccess'
 
 export function AppShell() {
+  // Operator-only: typing the secret code anywhere unlocks the dev console.
+  useDevCodeListener()
+
   return (
     <div className="scanlines flex min-h-full flex-col">
       <TopBar />

@@ -3,10 +3,7 @@ import { formatAp } from '@/lib/format'
 import { useGameStore } from '@/stores/useGameStore'
 import { StreakPill } from './StreakPill'
 
-const NAV_ITEMS = [
-  { to: '/', label: 'MISSION SELECT' },
-  { to: '/dev', label: 'DEV CONSOLE' },
-]
+const NAV_ITEMS = [{ to: '/', label: 'MISSION SELECT' }]
 
 export function TopBar() {
   const location = useLocation()
