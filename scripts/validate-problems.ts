@@ -16,6 +16,17 @@ const manifestPath = join(repoRoot, 'problem-packs', 'manifest.json')
 
 let failed = false
 
+/** Returns duplicated entries in a list of ids (empty when all unique). */
+export function findDuplicateIds(ids: string[]): string[] {
+  const seen = new Set<string>()
+  const duplicates = new Set<string>()
+  for (const id of ids) {
+    if (seen.has(id)) duplicates.add(id)
+    seen.add(id)
+  }
+  return [...duplicates]
+}
+
 function fail(message: string): void {
   failed = true
   console.error(`  ✗ ${message}`)
@@ -40,6 +51,9 @@ if (!manifestResult.success) {
   for (const detail of formatIssues(manifestResult.error.issues)) fail(detail)
 } else {
   console.log(`✓ manifest.json (${manifestResult.data.packs.length} entries)`)
+  const duplicatePackIds = findDuplicateIds(manifestResult.data.packs.map((p) => p.id))
+  if (duplicatePackIds.length > 0)
+    fail(`manifest.json: contains duplicate pack id(s): ${duplicatePackIds.join(', ')}`)
 }
 
 if (!existsSync(packsDir)) {
@@ -67,11 +81,12 @@ for (const file of files) {
   }
 
   const pack = result.data
-  const duplicateIds = pack.problems.length - new Set(pack.problems.map((p) => p.id)).size
+  const duplicateProblemIds = findDuplicateIds(pack.problems.map((p) => p.id))
   console.log(
     `✓ ${file} — "${pack.packId}" · difficulty ${pack.difficulty} · ${pack.problems.length} problems`,
   )
-  if (duplicateIds > 0) fail(`${file}: contains ${duplicateIds} duplicate problem id(s)`)
+  if (duplicateProblemIds.length > 0)
+    fail(`${file}: contains duplicate problem id(s): ${duplicateProblemIds.join(', ')}`)
 }
 
 console.log('')
