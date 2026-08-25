@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { findPack } from '@/game/placeholderPacks'
+import { ContentGate } from '@/components/ContentGate'
+import { useContentStore } from '@/stores/useContentStore'
 import { ProblemCard } from '@/components/ProblemCard'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
 import { PointsBadge } from '@/components/PointsBadge'
@@ -9,12 +10,21 @@ import { Button } from '@/components/Button'
 import { useGameStore } from '@/stores/useGameStore'
 
 export function VaultPage() {
+  return (
+    <ContentGate>
+      <VaultView />
+    </ContentGate>
+  )
+}
+
+function VaultView() {
   const { packId } = useParams<{ packId: string }>()
-  const pack = packId ? findPack(packId) : undefined
+  const packs = useContentStore((s) => s.packs)
+  const loaded = packId ? packs.find((p) => p.entry.id === packId) : undefined
   const completedProblems = useGameStore((s) => s.completedProblems)
   const navigate = useNavigate()
 
-  if (!pack) {
+  if (!loaded) {
     return (
       <EmptyState
         title="VAULT NOT FOUND"
@@ -31,7 +41,9 @@ export function VaultPage() {
     )
   }
 
-  const clearedCount = pack.anomalies.filter((a) => completedProblems.includes(a.id)).length
+  const { pack } = loaded
+  const clearedCount = pack.problems.filter((p) => completedProblems.includes(p.id)).length
+  const apTotal = pack.problems.reduce((sum, p) => sum + p.points, 0)
 
   return (
     <div className="space-y-8">
@@ -40,47 +52,46 @@ export function VaultPage() {
           Mission select
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-ink">{pack.vault.codename}</span>
+        <span className="text-ink">{pack.codename}</span>
       </nav>
 
       <header className="flex flex-col gap-4 rounded-lg border border-edge bg-panel p-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-widest text-signal sm:text-2xl">
-            {pack.vault.codename}
+            {pack.codename}
           </h1>
-          <p className="mt-1 text-[10px] tracking-widest text-ink-dim uppercase">
-            {pack.vault.sector}
+          <p className="mt-1 font-mono text-[10px] tracking-widest text-ink-dim uppercase">
+            {pack.packId}
           </p>
-          <p className="mt-3 max-w-xl text-xs leading-relaxed text-ink-dim">
-            {pack.vault.description}
-          </p>
+          <p className="mt-3 max-w-xl text-xs leading-relaxed text-ink-dim">{pack.description}</p>
         </div>
         <div className="flex shrink-0 flex-row gap-2 sm:flex-col sm:items-end">
-          <DifficultyBadge level={pack.vault.threatLevel} />
-          <PointsBadge value={pack.vault.apTotal} />
+          <DifficultyBadge difficulty={pack.difficulty} />
+          <PointsBadge value={apTotal} />
         </div>
       </header>
 
-      <ProgressBar value={clearedCount} max={pack.anomalies.length} label="Sync" />
+      <ProgressBar value={clearedCount} max={pack.problems.length} label="Sync" />
 
       <section aria-label="Anomalies">
         <h2 className="mb-4 flex items-center gap-3 text-xs tracking-widest text-ink-dim uppercase">
-          Anomalies ({pack.anomalies.length}) <span className="h-px flex-1 bg-edge" />
+          Anomalies ({pack.problems.length}) <span className="h-px flex-1 bg-edge" />
         </h2>
         <div className="grid gap-3 md:grid-cols-2">
-          {pack.anomalies.map((anomaly) => (
+          {pack.problems.map((problem, index) => (
             <ProblemCard
-              key={anomaly.id}
-              anomaly={anomaly}
-              packId={pack.vault.id}
-              status={completedProblems.includes(anomaly.id) ? 'cleared' : 'pending'}
+              key={problem.id}
+              problem={problem}
+              index={index}
+              packId={pack.packId}
+              status={completedProblems.includes(problem.id) ? 'cleared' : 'pending'}
             />
           ))}
         </div>
       </section>
 
       <div className="flex justify-end">
-        <Button onClick={() => navigate(`/results/${pack.vault.id}`)}>View run results →</Button>
+        <Button onClick={() => navigate(`/results/${pack.packId}`)}>View run results →</Button>
       </div>
     </div>
   )

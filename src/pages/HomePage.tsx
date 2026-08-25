@@ -1,4 +1,5 @@
-import { PLACEHOLDER_PACKS } from '@/game/placeholderPacks'
+import { ContentGate } from '@/components/ContentGate'
+import { useContentStore } from '@/stores/useContentStore'
 import { useGameStore } from '@/stores/useGameStore'
 import { VaultCard } from '@/components/VaultCard'
 import { Card } from '@/components/Card'
@@ -6,6 +7,15 @@ import { ProgressBar } from '@/components/ProgressBar'
 import { formatAp } from '@/lib/format'
 
 export function HomePage() {
+  return (
+    <ContentGate>
+      <HomeView />
+    </ContentGate>
+  )
+}
+
+function HomeView() {
+  const packs = useContentStore((s) => s.packs)
   const totalPoints = useGameStore((s) => s.totalPoints)
   const currentStreak = useGameStore((s) => s.currentStreak)
   const bestStreak = useGameStore((s) => s.bestStreak)
@@ -30,17 +40,26 @@ export function HomePage() {
           <h2 className="mb-4 flex items-center gap-3 text-xs tracking-widest text-ink-dim uppercase">
             Select vault <span className="h-px flex-1 bg-edge" />
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {PLACEHOLDER_PACKS.map((pack) => (
-              <VaultCard
-                key={pack.vault.id}
-                vault={pack.vault}
-                completedCount={
-                  pack.anomalies.filter((a) => completedProblems.includes(a.id)).length
-                }
-              />
-            ))}
-          </div>
+          {packs.length === 0 ? (
+            <Card className="border-warn/40 p-8 text-center">
+              <p className="text-xs tracking-widest text-warn uppercase">No vaults registered</p>
+              <p className="mt-2 text-xs text-ink-dim">
+                The manifest loaded but contains no packs. Check the content source.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {packs.map(({ pack }) => (
+                <VaultCard
+                  key={pack.packId}
+                  pack={pack}
+                  completedCount={
+                    pack.problems.filter((p) => completedProblems.includes(p.id)).length
+                  }
+                />
+              ))}
+            </div>
+          )}
         </section>
 
         <aside className="order-1 lg:order-2">
