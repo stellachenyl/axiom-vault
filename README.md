@@ -98,12 +98,22 @@ VITE_PROBLEM_BASE_URL=https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOU
   `public/problem-packs/`, so development works offline.
 - The active source is displayed on the `/dev` console.
 
-## Deployment (GitHub Pages)
+## Deployment (Vercel)
 
-`.github/workflows/deploy.yml` deploys on every push to `main`: installs dependencies →
-validates problem packs → runs tests → builds → publishes to GitHub Pages under the
-repository subpath (`VITE_BASE_PATH`). Enable Pages via **Settings → Pages → Source:
-GitHub Actions**.
+The demo deploys on [Vercel](https://vercel.com): import the repo, and Vercel
+auto-detects Vite (`npm run build` → `dist`). `vercel.json` contains an SPA
+rewrite so client-side routes survive hard refreshes and direct visits; static
+assets and `/problem-packs` are served as files first.
+
+Every push to `main` auto-deploys; other branches get preview URLs. The app
+uses the bundled `public/problem-packs` fallback unless `VITE_PROBLEM_BASE_URL`
+is set in Project Settings → Environment Variables.
+
+Before deploying, run the release gates locally:
+
+```bash
+npm run validate:problems && npm test && npm run build
+```
 
 ## Intended architecture
 
