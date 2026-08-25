@@ -1,0 +1,22 @@
+{
+  "id": "sd-10-silent-runner",
+  "kind": "text",
+  "title": "Silent Runner",
+  "statementMarkdown": "A legacy runner process broadcasts its identifier in **base 2** only. The identifier on screen is the decimal value $42$.\n\n**Transmit the binary string the runner is broadcasting** (digits only, no prefix).",
+  "points": 170,
+  "timeLimitSeconds": 180,
+  "hints": [
+    "Subtract the largest power of two you can, repeatedly: 32, then 16, 8, 4, 2, 1.",
+    "Your answer should contain exactly six digits."
+  ],
+  "hiddenTags": [
+    "binary"
+  ],
+  "answer": {
+    "type": "text",
+    "acceptedAnswers": [
+      "101010"
+    ],
+    "trimWhitespace": true
+  }
+}

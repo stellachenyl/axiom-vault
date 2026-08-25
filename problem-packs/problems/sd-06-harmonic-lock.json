@@ -1,0 +1,20 @@
+{
+  "id": "sd-06-harmonic-lock",
+  "kind": "numeric",
+  "title": "Harmonic Lock",
+  "statementMarkdown": "Ten calibration rotors fire on cycles of **1, 2, 3, …, 10** seconds. The harmonic lock opens on the first beat at which **every rotor fires together**.\n\n**Which beat opens the lock?**",
+  "points": 220,
+  "timeLimitSeconds": 300,
+  "hints": [
+    "Build it up: lcm of 1–5 first, then fold in 6 through 10.",
+    "The rotor on a 7-second cycle forces the answer to be a multiple of 7."
+  ],
+  "hiddenTags": [
+    "lcm"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 2520,
+    "tolerance": 0
+  }
+}

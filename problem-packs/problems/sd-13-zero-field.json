@@ -1,0 +1,20 @@
+{
+  "id": "sd-13-zero-field",
+  "kind": "numeric",
+  "title": "Zero Field",
+  "statementMarkdown": "Expanding $60!$ produces a colossal decimal readout whose tail dissolves into zeros.\n\n**How many trailing zeros does the expansion of $60!$ end with?**",
+  "points": 230,
+  "timeLimitSeconds": 270,
+  "hints": [
+    "Each trailing zero needs a factor pair 2 × 5; twos are abundant, count the fives.",
+    "Remember higher powers: multiples of 25 contribute an extra five each."
+  ],
+  "hiddenTags": [
+    "factorial"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 14,
+    "tolerance": 0
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "sd-15-cipher-alignment",
+  "kind": "text",
+  "title": "Cipher Alignment",
+  "statementMarkdown": "An ancient alignment plate bears the cipher **MCMXCIV**. The console decodes additive letters (M, C, X, I) forward, while subtractive pairs (CM, XC, IV) reduce.\n\n**Transmit the decimal value the cipher aligns to.**",
+  "points": 190,
+  "timeLimitSeconds": 210,
+  "hints": [
+    "Break it apart: M + CM + XC + IV.",
+    "Each subtractive pair contributes 90 or 90… decode CM = 900 and XC = 90 carefully."
+  ],
+  "hiddenTags": [
+    "roman-numerals"
+  ],
+  "answer": {
+    "type": "text",
+    "acceptedAnswers": [
+      "1994"
+    ],
+    "trimWhitespace": true
+  }
+}

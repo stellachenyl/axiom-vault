@@ -1,0 +1,20 @@
+{
+  "id": "sd-02-phase-count",
+  "kind": "numeric",
+  "title": "Phase Count",
+  "statementMarkdown": "The drift sector scatters phase markers along the number line from **1** to **50**.\n\nOnly markers sitting on indivisible coordinates stay stable. **How many stable markers are there?**",
+  "points": 140,
+  "timeLimitSeconds": 180,
+  "hints": [
+    "Indivisible means divisible only by 1 and itself.",
+    "Do not forget the marker at coordinate 2 — the only even stable one."
+  ],
+  "hiddenTags": [
+    "primes"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 15,
+    "tolerance": 0
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "sd-08-divisor-key",
+  "kind": "choice",
+  "title": "Divisor Key",
+  "statementMarkdown": "A containment cell responds only to a key engraved with **exactly twelve divisor runes** — that is, exactly twelve positive divisors.\n\n**Which key opens the cell?**",
+  "points": 190,
+  "timeLimitSeconds": 240,
+  "hints": [
+    "For $n = p^a q^b \\cdots$, the divisor count is $(a+1)(b+1)\\cdots$.",
+    "Factor every option — three of them fail immediately once factored."
+  ],
+  "hiddenTags": [
+    "divisors"
+  ],
+  "answer": {
+    "type": "choice",
+    "options": [
+      {
+        "id": "opt-a",
+        "labelMarkdown": "$48$"
+      },
+      {
+        "id": "opt-b",
+        "labelMarkdown": "$60$"
+      },
+      {
+        "id": "opt-c",
+        "labelMarkdown": "$64$"
+      },
+      {
+        "id": "opt-d",
+        "labelMarkdown": "$128$"
+      }
+    ],
+    "correctOptionId": "opt-b"
+  }
+}

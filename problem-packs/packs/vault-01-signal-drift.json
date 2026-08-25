@@ -1,0 +1,26 @@
+{
+  "packId": "vault-01-signal-drift",
+  "title": "Vault 01: Signal Drift",
+  "codename": "SIGNAL DRIFT",
+  "difficulty": 5,
+  "description": "Mid-tier containment. Signals drift between states mid-trial; timing and precision decide which anomalies can be contained.",
+  "problems": [
+    "sd-01-cold-boot",
+    "sd-02-phase-count",
+    "sd-03-checksum",
+    "sd-04-drift-fracture",
+    "sd-05-loop-lock",
+    "sd-06-harmonic-lock",
+    "sd-07-twin-beacons",
+    "sd-08-divisor-key",
+    "sd-09-pulse-cycle",
+    "sd-10-silent-runner",
+    "sd-11-state-convergence",
+    "sd-12-keystone",
+    "sd-13-zero-field",
+    "sd-14-anomaly-cluster",
+    "sd-15-cipher-alignment",
+    "sd-16-square-cipher",
+    "sd-17-final-sync"
+  ]
+}
