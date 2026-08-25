@@ -67,5 +67,9 @@ export function checkAnswer(problem: Problem, rawSubmission: string): AnswerChec
       return checkChoice(problem.answer, rawSubmission)
     case 'text':
       return checkText(problem.answer, rawSubmission)
+    // Runtime data is schema-validated before reaching this point, but a
+    // malformed record must never crash the runner — treat it as rejected.
+    default:
+      return { verdict: 'incorrect', isCorrect: false }
   }
 }
