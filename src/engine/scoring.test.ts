@@ -80,4 +80,70 @@ describe('computeEarnedPoints', () => {
     const earned = computeEarnedPoints({ ...base, currentStreak: 10 })
     expect(Number.isInteger(earned)).toBe(true)
   })
+
+  it('handles zero-point problems safely', () => {
+    const earned = computeEarnedPoints({
+      basePoints: 0,
+      timeLimitSeconds: 60,
+      secondsUsed: 0,
+      hintsRevealed: 2,
+      currentStreak: 5,
+    })
+    expect(earned).toBe(0)
+  })
+
+  it('handles negative base points defensively', () => {
+    expect(computeEarnedPoints({ ...base, basePoints: -50 })).toBe(0)
+  })
+
+  it('handles missing optional fields safely', () => {
+    // No timeLimitSeconds at all — no bonus branch runs.
+    expect(computeEarnedPoints({ ...base, timeLimitSeconds: undefined })).toBe(100)
+    // timeLimitSeconds = 0 behaves like "no limit".
+    expect(computeEarnedPoints({ ...base, timeLimitSeconds: 0 })).toBe(100)
+  })
+
+  it('treats fractional hint counts defensively', () => {
+    expect(computeEarnedPoints({ ...base, hintsRevealed: 1.7 })).toBe(90)
+  })
+
+  it('rounds the final result to the nearest integer', () => {
+    // base 101, instant solve → 151.5, ×1.0 → rounds to 152.
+    expect(
+      computeEarnedPoints({
+        basePoints: 101,
+        timeLimitSeconds: 60,
+        secondsUsed: 0,
+        hintsRevealed: 0,
+        currentStreak: 0,
+      }),
+    ).toBe(152)
+  })
+
+  it('caps hint penalties at three channels even with overtime', () => {
+    // Overtime kills the bonus; three hints subtract 30% — no more.
+    const earned = computeEarnedPoints({
+      basePoints: 100,
+      timeLimitSeconds: 30,
+      secondsUsed: 5000,
+      hintsRevealed: 9,
+      currentStreak: 0,
+    })
+    expect(earned).toBe(70)
+  })
+
+  it('keeps hinted clears at or above the configured floor of base', () => {
+    // The floor (20% of base) is defensive: with penalties capped at 30%
+    // and bonuses non-negative it cannot bind through normal inputs, but
+    // earned points must never drop below it if rules ever change.
+    const earned = computeEarnedPoints({
+      basePoints: 100,
+      timeLimitSeconds: 30,
+      secondsUsed: 5000,
+      hintsRevealed: 3,
+      currentStreak: 0,
+    })
+    expect(earned).toBeGreaterThanOrEqual(20)
+    expect(earned).toBe(70) // exact value under current rules
+  })
 })

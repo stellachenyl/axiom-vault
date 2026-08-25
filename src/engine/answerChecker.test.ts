@@ -89,6 +89,18 @@ describe('checkAnswer — choice', () => {
   it('rejects other option ids', () => {
     expect(checkAnswer(problem, 'a').isCorrect).toBe(false)
   })
+
+  it('fails safely when the stored correctOptionId is missing from options', () => {
+    const broken = makeProblem({
+      answer: {
+        type: 'choice',
+        options: [{ id: 'a', labelMarkdown: 'A' }],
+        correctOptionId: 'ghost',
+      },
+    })
+    expect(checkAnswer(broken, 'a').isCorrect).toBe(false)
+    expect(checkAnswer(broken, '').isCorrect).toBe(false)
+  })
 })
 
 describe('checkAnswer — text', () => {
@@ -127,5 +139,23 @@ describe('checkAnswer — text', () => {
     })
     expect(checkAnswer(problem, 'beta').isCorrect).toBe(true)
     expect(checkAnswer(problem, 'gamma').isCorrect).toBe(false)
+  })
+})
+
+describe('checkAnswer — robustness', () => {
+  it('fails safely on an unexpected answer type instead of crashing', async () => {
+    const { checkAnswer: freshCheck } = await import('./answerChecker')
+    const malformed = {
+      id: 'x',
+      kind: 'numeric',
+      statementMarkdown: 's',
+      points: 1,
+      hints: [],
+      hiddenTags: [],
+      answer: { type: 'quantum' },
+    } as unknown as Problem
+    const result = freshCheck(malformed, 'anything')
+    expect(result.isCorrect).toBe(false)
+    expect(result.verdict).toBe('incorrect')
   })
 })
