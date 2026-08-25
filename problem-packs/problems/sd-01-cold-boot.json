@@ -1,0 +1,20 @@
+{
+  "id": "sd-01-cold-boot",
+  "kind": "numeric",
+  "title": "Cold Boot",
+  "statementMarkdown": "A cold-boot pulse starts at strength **1** and doubles every cycle.\n\nFind the first cycle $n$ at which the pulse strength exceeds **1000**.",
+  "points": 100,
+  "timeLimitSeconds": 120,
+  "hints": [
+    "Track the doubling sequence — it passes 1000 quickly.",
+    "512 is still below the threshold; check the next cycle."
+  ],
+  "hiddenTags": [
+    "exponentiation"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 10,
+    "tolerance": 0
+  }
+}

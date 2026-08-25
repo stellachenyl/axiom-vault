@@ -7,6 +7,14 @@
       "difficulty": 3,
       "file": "vault-00-calibration.json",
       "description": "Initial sync trials. Baseline signal integrity check before deeper containment sectors unlock."
+    },
+    {
+      "id": "vault-01-signal-drift",
+      "title": "Vault 01: Signal Drift",
+      "codename": "SIGNAL DRIFT",
+      "difficulty": 5,
+      "file": "vault-01-signal-drift.json",
+      "description": "Mid-tier containment. Signals drift between states mid-trial; timing and precision decide which anomalies can be contained."
     }
   ]
 }

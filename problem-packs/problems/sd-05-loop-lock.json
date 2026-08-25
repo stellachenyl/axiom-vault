@@ -1,0 +1,37 @@
+{
+  "id": "sd-05-loop-lock",
+  "kind": "choice",
+  "title": "Loop Lock",
+  "statementMarkdown": "Two drive gears mesh with **24** and **60** teeth respectively. The loop seal engages the first time both gears return to their starting orientation simultaneously.\n\n**After how many tooth-steps does the seal engage?**",
+  "points": 180,
+  "timeLimitSeconds": 240,
+  "hints": [
+    "You need the smallest count divisible by both 24 and 60.",
+    "Prime-factorize both gears: $2^3 \\cdot 3$ and $2^2 \\cdot 3 \\cdot 5$. Take the maximum power of each."
+  ],
+  "hiddenTags": [
+    "lcm"
+  ],
+  "answer": {
+    "type": "choice",
+    "options": [
+      {
+        "id": "opt-a",
+        "labelMarkdown": "$60$ tooth-steps"
+      },
+      {
+        "id": "opt-b",
+        "labelMarkdown": "$84$ tooth-steps"
+      },
+      {
+        "id": "opt-c",
+        "labelMarkdown": "$120$ tooth-steps"
+      },
+      {
+        "id": "opt-d",
+        "labelMarkdown": "$240$ tooth-steps"
+      }
+    ],
+    "correctOptionId": "opt-c"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "sd-14-anomaly-cluster",
+  "kind": "choice",
+  "title": "Anomaly Cluster",
+  "statementMarkdown": "A containment field runs on capacity $2^{10}$. Four probe charges are tested against it — three divide the field cleanly, one does not.\n\n**Which charge is rejected?**",
+  "points": 170,
+  "timeLimitSeconds": 180,
+  "hints": [
+    "$2^{10}$ is only built from the factor 2.",
+    "Factor each probe — anything carrying a foreign factor bounces."
+  ],
+  "hiddenTags": [
+    "divisors",
+    "powers-of-two"
+  ],
+  "answer": {
+    "type": "choice",
+    "options": [
+      {
+        "id": "opt-a",
+        "labelMarkdown": "$32$"
+      },
+      {
+        "id": "opt-b",
+        "labelMarkdown": "$64$"
+      },
+      {
+        "id": "opt-c",
+        "labelMarkdown": "$128$"
+      },
+      {
+        "id": "opt-d",
+        "labelMarkdown": "$192$"
+      }
+    ],
+    "correctOptionId": "opt-d"
+  }
+}

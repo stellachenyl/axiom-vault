@@ -1,0 +1,20 @@
+{
+  "id": "sd-17-final-sync",
+  "kind": "numeric",
+  "title": "Final Sync",
+  "statementMarkdown": "The drift core realigns when fed the **sum of the three smallest indivisible coordinates greater than 50** — the same stable markers the sector scatters elsewhere.\n\n**Transmit the alignment value.**",
+  "points": 320,
+  "timeLimitSeconds": 330,
+  "hints": [
+    "Sweep upward from 51 and test each candidate for indivisibility.",
+    "The third marker sits just past 60."
+  ],
+  "hiddenTags": [
+    "primes"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 173,
+    "tolerance": 0
+  }
+}

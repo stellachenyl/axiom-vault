@@ -1,0 +1,20 @@
+{
+  "id": "sd-09-pulse-cycle",
+  "kind": "numeric",
+  "title": "Pulse Cycle",
+  "statementMarkdown": "A pulse emitter repeats $7^{n}$ on cycle $n$, but consoles only ever read the **final digit** of the readout.\n\n**What final digit does cycle $n = 2026$ display?**",
+  "points": 210,
+  "timeLimitSeconds": 240,
+  "hints": [
+    "Compute $7^n$ mod 10 for $n = 1, 2, 3, 4$ — a short repeating loop appears.",
+    "Divide 2026 by the loop length and take the remainder."
+  ],
+  "hiddenTags": [
+    "modular"
+  ],
+  "answer": {
+    "type": "numeric",
+    "value": 9,
+    "tolerance": 0
+  }
+}
