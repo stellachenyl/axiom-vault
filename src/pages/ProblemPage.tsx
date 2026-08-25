@@ -158,7 +158,18 @@ function ProblemRunner({
           <TimerPill
             limitSeconds={problem.timeLimitSeconds}
             running={!locked}
-            onExpire={() => setExpired(true)}
+            onExpire={() => {
+              // The window closed without a valid transmission — log it as
+              // a failed node so streaks and debrief telemetry stay honest.
+              setExpired(true)
+              recordAttempt({
+                problemId: problem.id,
+                packId: loadedPack.pack.packId,
+                correct: false,
+                pointsAwarded: 0,
+                hintsUsed: revealedHints,
+              })
+            }}
           />
           <StreakPill streak={currentStreak} best={bestStreak} />
           <PointsBadge value={totalPoints} />
