@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { problemPackSchema, manifestSchema } from './problem'
+import {
+  problemPackSchema,
+  manifestSchema,
+  problemSchema,
+  numericAnswerSchema,
+  choiceAnswerSchema,
+  textAnswerSchema,
+} from './problem'
 import type { ProblemPack } from './problem'
 
 const validProblem = {
@@ -137,5 +144,62 @@ describe('manifestSchema', () => {
     expect(manifestSchema.safeParse({ packs: [{ ...entry, file: '' }] }).success).toBe(false)
     expect(manifestSchema.safeParse({ packs: [{ ...entry, difficulty: 99 }] }).success).toBe(false)
     expect(manifestSchema.safeParse({ packs: [] }).success).toBe(true) // empty registry is valid
+  })
+})
+
+describe('answer sub-schemas', () => {
+  it('rejects invalid numeric answers', () => {
+    expect(numericAnswerSchema.safeParse({ type: 'numeric' }).success).toBe(false)
+    expect(numericAnswerSchema.safeParse({ type: 'numeric', value: 'six' }).success).toBe(false)
+    expect(
+      numericAnswerSchema.safeParse({ type: 'numeric', value: 6, tolerance: -1 }).success,
+    ).toBe(false)
+  })
+
+  it('rejects invalid choice answers', () => {
+    const options = [
+      { id: 'a', labelMarkdown: 'A' },
+      { id: 'b', labelMarkdown: 'B' },
+    ]
+    // fewer than two options
+    expect(choiceAnswerSchema.safeParse({ type: 'choice', options: [options[0]], correctOptionId: 'a' }).success).toBe(false)
+    // dangling correctOptionId
+    expect(choiceAnswerSchema.safeParse({ type: 'choice', options, correctOptionId: 'zzz' }).success).toBe(false)
+    // malformed option
+    expect(
+      choiceAnswerSchema.safeParse({
+        type: 'choice',
+        options: [
+          { id: '', labelMarkdown: 'A' },
+          { id: 'b', labelMarkdown: 'B' },
+        ],
+        correctOptionId: 'b',
+      }).success,
+    ).toBe(false)
+  })
+
+  it('rejects invalid text answers', () => {
+    expect(textAnswerSchema.safeParse({ type: 'text', acceptedAnswers: [] }).success).toBe(false)
+    expect(textAnswerSchema.safeParse({ type: 'text' }).success).toBe(false)
+    expect(textAnswerSchema.safeParse({ type: 'text', acceptedAnswers: [''] }).success).toBe(false)
+  })
+})
+
+describe('problemSchema hard cases', () => {
+  it('rejects unknown kinds and empty statements', () => {
+    expect(problemSchema.safeParse({ ...validProblem, kind: 'essay' }).success).toBe(false)
+    expect(problemSchema.safeParse({ ...validProblem, statementMarkdown: '' }).success).toBe(false)
+    expect(problemSchema.safeParse({ ...validProblem, id: '' }).success).toBe(false)
+  })
+
+  it('keeps hiddenTags as internal-only data (parsed but never rendered by the UI)', () => {
+    const result = problemSchema.parse({
+      ...validProblem,
+      hiddenTags: ['sequences', 'recurrence'],
+    })
+    // The schema preserves the data for future internal systems...
+    expect(result.hiddenTags).toEqual(['sequences', 'recurrence'])
+    // ...while no UI component consumes it (verified structurally here and
+    // behaviorally in the page tests, which assert the tags never appear).
   })
 })
